@@ -1,7 +1,7 @@
 import Bun from 'bun';
 
 await Bun.build({
-  entrypoints: ['./source/index.ts'],
-  outdir: './build',
+  entrypoints: ['./index.ts'],
+  outdir: './',
   target: 'node',
 });

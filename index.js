@@ -1,4 +1,4 @@
-// source/index.ts
+// index.ts
 import {readdir} from "fs/promises";
 var defaultTransformFunction = (body = "") => body;
 var normalizeDirectoryPath = (directoryPath = "") => {
@@ -8,6 +8,7 @@ var normalizeDirectoryPath = (directoryPath = "") => {
 class FileMover {
   constructor(props) {
     this.run(props);
+    return this;
   }
   async run({ from = "./build", to = "./build", transform = defaultTransformFunction }) {
     const files = await readdir(from, { withFileTypes: true });
@@ -15,7 +16,7 @@ class FileMover {
       if (file.isFile()) {
         const data = Bun.file(normalizeDirectoryPath(file.path) + file.name);
         const content = await data.text();
-        await Bun.write(`${to}/${file.name}`, transform(content));
+        await Bun.write(normalizeDirectoryPath(to) + file.name, transform(content));
       } else if (file.isDirectory()) {
         await this.run({
           from: normalizeDirectoryPath(from) + file.name,
@@ -26,7 +27,7 @@ class FileMover {
     }
   }
 }
-var Index = (config) => {
+var FileMoverPlugin = (config) => {
   return {
     name: "FileMoverPlugin",
     async setup() {
@@ -35,5 +36,5 @@ var Index = (config) => {
   };
 };
 export {
-  Index
+  FileMoverPlugin
 };
