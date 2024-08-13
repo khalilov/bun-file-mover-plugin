@@ -5,6 +5,7 @@ type EntryPointConfig = {
   from: string,
   to?: string,
   transform?: any
+  recursive?: boolean
 };
 
 const defaultTransformFunction = (body: string = ''): string => (body);
@@ -14,13 +15,13 @@ const normalizeDirectoryPath = (directoryPath: string = '') => {
 }
 
 class FileMover {
-  constructor(props) {
+  constructor(props: EntryPointConfig) {
     this.run(props);
 
     return this;
   }
 
-  async run({ from = './build', to = './build', transform = defaultTransformFunction }: EntryPointConfig) {
+  async run({ from = './src', to = './build', transform = defaultTransformFunction, recursive = true }: EntryPointConfig) {
     const files = await readdir(from, { withFileTypes: true });
 
     for (const file of files) {
@@ -29,7 +30,7 @@ class FileMover {
         const content = await data.text();
 
         await Bun.write(normalizeDirectoryPath(to) + file.name, transform(content));
-      } else if (file.isDirectory()) {
+      } else if (file.isDirectory() && recursive) {
         await this.run({
           from: normalizeDirectoryPath(from) + file.name,
           to: normalizeDirectoryPath(to) + file.name,
