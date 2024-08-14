@@ -1,18 +1,19 @@
-import { BunPlugin } from 'bun'
+import { BunPlugin, type BunFile } from 'bun';
 import { readdir } from 'fs/promises';
+import { isText } from 'istextorbinary';
 
 type EntryPointConfig = {
-  from: string,
-  to?: string,
-  transform?: any
-  recursive?: boolean
+  from: string;
+  to?: string;
+  transform?: any;
+  recursive?: boolean;
 };
 
-const defaultTransformFunction = (body: string = ''): string => (body);
+const defaultTransformFunction = (body: string = ''): string => body;
 
 const normalizeDirectoryPath = (directoryPath: string = '') => {
   return directoryPath.endsWith('/') ? directoryPath : directoryPath + '/';
-}
+};
 
 class FileMover {
   constructor(props: EntryPointConfig) {
@@ -21,20 +22,28 @@ class FileMover {
     return this;
   }
 
-  async run({ from = './src', to = './build', transform = defaultTransformFunction, recursive = true }: EntryPointConfig) {
+  async run({
+              from = './src',
+              to = './build',
+              transform = defaultTransformFunction,
+              recursive = true,
+            }: EntryPointConfig): Promise<any> {
     const files = await readdir(from, { withFileTypes: true });
 
     for (const file of files) {
       if (file.isFile()) {
-        const data = Bun.file(normalizeDirectoryPath(file.path) + file.name);
-        const content = await data.text();
+        const data: BunFile = Bun.file(normalizeDirectoryPath(file.path) + file.name);
+        const buffer: Buffer = new Buffer(await data.arrayBuffer());
+        const isTextFile: boolean | null = isText(file.name, buffer);
+        const content: string | Buffer = isTextFile ? await data.text() : buffer;
 
-        await Bun.write(normalizeDirectoryPath(to) + file.name, transform(content));
+        await Bun.write(normalizeDirectoryPath(to) + file.name, isTextFile ? transform(content as string) : content);
       } else if (file.isDirectory() && recursive) {
         await this.run({
           from: normalizeDirectoryPath(from) + file.name,
           to: normalizeDirectoryPath(to) + file.name,
           transform,
+          recursive,
         });
       }
     }
@@ -46,6 +55,6 @@ export const FileMoverPlugin = (config: EntryPointConfig): BunPlugin => {
     name: 'FileMoverPlugin',
     async setup() {
       new FileMover(config);
-    }
+    },
   };
-}
+};
