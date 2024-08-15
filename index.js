@@ -477,9 +477,7 @@ class FileMover {
       if (file.isFile()) {
         const data = Bun.file(normalizeDirectoryPath(file.path) + file.name);
         const buffer = new Buffer(await data.arrayBuffer());
-        const isTextFile = isText(file.name, buffer);
-        const content = isTextFile ? await data.text() : buffer;
-        await Bun.write(normalizeDirectoryPath(to) + file.name, isTextFile ? transform(content) : content);
+        await Bun.write(normalizeDirectoryPath(to) + file.name, isText(file.name, buffer) ? transform(await data.text()) : buffer);
       } else if (file.isDirectory() && recursive) {
         await this.run({
           from: normalizeDirectoryPath(from) + file.name,
