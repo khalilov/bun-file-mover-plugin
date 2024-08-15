@@ -34,10 +34,11 @@ class FileMover {
       if (file.isFile()) {
         const data: BunFile = Bun.file(normalizeDirectoryPath(file.path) + file.name);
         const buffer: Buffer = new Buffer(await data.arrayBuffer());
-        const isTextFile: boolean | null = isText(file.name, buffer);
-        const content: string | Buffer = isTextFile ? await data.text() : buffer;
 
-        await Bun.write(normalizeDirectoryPath(to) + file.name, isTextFile ? transform(content as string) : content);
+        await Bun.write(
+          normalizeDirectoryPath(to) + file.name,
+          isText(file.name, buffer) ? transform(await data.text()) : buffer,
+        );
       } else if (file.isDirectory() && recursive) {
         await this.run({
           from: normalizeDirectoryPath(from) + file.name,
