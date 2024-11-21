@@ -456,7 +456,7 @@ var isLaterByteOfUtf8 = function(byte) {
 };
 
 // index.ts
-var defaultTransformFunction = (body = "") => body;
+var defaultTransformFunction = async (body = "") => body;
 var normalizeDirectoryPath = (directoryPath = "") => {
   return directoryPath.endsWith("/") ? directoryPath : directoryPath + "/";
 };
@@ -477,7 +477,7 @@ class FileMover {
       if (file.isFile()) {
         const data = Bun.file(normalizeDirectoryPath(file.path) + file.name);
         const buffer = new Buffer(await data.arrayBuffer());
-        await Bun.write(normalizeDirectoryPath(to) + file.name, isText(file.name, buffer) ? transform(await data.text()) : buffer);
+        await Bun.write(normalizeDirectoryPath(to) + file.name, isText(file.name, buffer) ? await transform(await data.text()) : buffer);
       } else if (file.isDirectory() && recursive) {
         await this.run({
           from: normalizeDirectoryPath(from) + file.name,
