@@ -9,7 +9,7 @@ type EntryPointConfig = {
   recursive?: boolean;
 };
 
-const defaultTransformFunction = (body: string = ''): string => body;
+const defaultTransformFunction = async (body: string = ''): Promise<string> => body;
 
 const normalizeDirectoryPath = (directoryPath: string = '') => {
   return directoryPath.endsWith('/') ? directoryPath : directoryPath + '/';
@@ -37,7 +37,7 @@ class FileMover {
 
         await Bun.write(
           normalizeDirectoryPath(to) + file.name,
-          isText(file.name, buffer) ? transform(await data.text()) : buffer,
+          isText(file.name, buffer) ? await transform(await data.text()) : buffer,
         );
       } else if (file.isDirectory() && recursive) {
         await this.run({
